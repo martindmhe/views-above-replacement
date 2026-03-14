@@ -180,7 +180,7 @@ def predict_views(game_id: int):
 
     if boxscore.get('gameState') != 'OFF':
         print(f"Game {game_id} is not completed")
-        return
+        return None, None
 
     print(f"Game {game_id} is completed")
 
