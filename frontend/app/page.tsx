@@ -19,6 +19,13 @@ type LatestGame = {
   features?: Record<string, unknown>;
 };
 
+type NextGame = {
+  game_id: number;
+  game_date: string;
+  opponent: string;
+  is_home: boolean;
+};
+
 const ABBREV_TO_NAME: Record<string, string> = {
   ANA: "Ducks",
   ARI: "Coyotes",
@@ -57,6 +64,7 @@ const ABBREV_TO_NAME: Record<string, string> = {
 
 export default function Home() {
   const [game, setGame] = useState<LatestGame | null>(null);
+  const [nextGame, setNextGame] = useState<NextGame | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,6 +78,15 @@ export default function Home() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    fetch("/api/next-game")
+      .then((res) => res.json())
+      .then((data) => setNextGame(data && data.game_id ? data : null))
+      .catch(() => setNextGame(null));
+  }, []);
+
+  console.log(nextGame);
 
   if (loading) {
     return (
@@ -146,6 +163,45 @@ export default function Home() {
             {game.predicted_views.toLocaleString()}
           </p>
         </div>
+
+        {nextGame && (
+          <div className="mt-10 border-t border-zinc-200 pt-8">
+            <p className="text-xs font-medium uppercase tracking-widest text-zinc-400">
+              Next game
+            </p>
+            <div className="mt-3 flex items-center justify-center gap-4">
+              <Image
+                src={teamLogoUrl("TOR")}
+                alt="Maple Leafs"
+                width={40}
+                height={40}
+                className="object-contain"
+              />
+              <span className="text-zinc-400">vs</span>
+              <Image
+                src={teamLogoUrl(nextGame.opponent)}
+                alt={ABBREV_TO_NAME[nextGame.opponent] ?? nextGame.opponent}
+                width={40}
+                height={40}
+                className="object-contain"
+              />
+            </div>
+            <p className="mt-1 text-center text-sm font-medium text-zinc-700">
+              {nextGame.is_home ? "vs" : "@"} {ABBREV_TO_NAME[nextGame.opponent] ?? nextGame.opponent}
+            </p>
+            <p className="mt-2 text-center text-sm text-zinc-500">
+              {(() => {
+                const [y, m, d] = nextGame.game_date.split("-").map(Number);
+                return new Date(y, m - 1, d).toLocaleDateString("en-CA", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                });
+              })()}
+            </p>
+          </div>
+        )}
       </main>
     </div>
   );
