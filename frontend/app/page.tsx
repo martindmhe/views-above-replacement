@@ -46,7 +46,9 @@ export default function Home() {
   }
 
   const matchup = game.is_home ? `vs ${game.opponent}` : `@ ${game.opponent}`;
-  const dateStr = new Date(game.game_date).toLocaleDateString("en-CA", {
+
+  const [y, m, d] = game.game_date.split("-").map(Number);
+  const dateStr = new Date(y, m - 1, d).toLocaleDateString("en-CA", {
     weekday: "short",
     year: "numeric",
     month: "short",
@@ -57,7 +59,7 @@ export default function Home() {
     <div className="min-h-screen bg-white font-sans">
       <main className="mx-auto max-w-2xl px-6 py-12">
         <h1 className="text-xl font-semibold text-zinc-900">
-          Latest game with prediction
+          Last Game
         </h1>
         <p className="mt-1 text-sm text-zinc-500">{dateStr}</p>
 
