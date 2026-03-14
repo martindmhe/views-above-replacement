@@ -253,4 +253,6 @@ def update():
 
         
 if __name__ == "__main__":
+    print("Start LFR update")
     update()
+    print("Done")
