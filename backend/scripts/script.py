@@ -217,7 +217,7 @@ def predict_views(game_id: int):
 
     prediction = model.predict(pd.DataFrame([features]))[0]
 
-    return prediction, features
+    return [prediction, features]
 
 def update():
     if not url or not key:
