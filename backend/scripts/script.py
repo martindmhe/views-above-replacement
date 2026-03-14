@@ -1,8 +1,6 @@
 import os
-import requests
 import pickle
 import pandas as pd
-from datetime import datetime, timedelta
 from supabase import create_client, Client
 from nhlpy import NHLClient
 from dotenv import load_dotenv
