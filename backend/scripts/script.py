@@ -1,14 +1,54 @@
 import os
+import sys
 import pickle
 import pandas as pd
+from datetime import datetime, timezone, timedelta
 from supabase import create_client, Client
 from nhlpy import NHLClient
 from dotenv import load_dotenv
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 client = NHLClient()
 
 TOR_ABBREV = "TOR"
+
+# use for team matching in video titles
+ABBREV_TO_TEAM_NAME = {
+    "ANA": "Ducks",
+    "ARI": "Coyotes",
+    "BOS": "Bruins",
+    "BUF": "Sabres",
+    "CAR": "Hurricanes",
+    "CGY": "Flames",
+    "CHI": "Blackhawks",
+    "CBJ": "Blue Jackets",
+    "COL": "Avalanche",
+    "DAL": "Stars",
+    "DET": "Red Wings",
+    "EDM": "Oilers",
+    "FLA": "Panthers",
+    "LAK": "Kings",
+    "MIN": "Wild",
+    "MTL": "Canadiens",
+    "NSH": "Predators",
+    "NJD": "Devils",
+    "NYI": "Islanders",
+    "NYR": "Rangers",
+    "OTT": "Senators",
+    "PHI": "Flyers",
+    "PIT": "Penguins",
+    "SJS": "Sharks",
+    "SEA": "Kraken",
+    "STL": "Blues",
+    "TBL": "Lightning",
+    "UTA": "Mammoth",
+    "VAN": "Canucks",
+    "VGK": "Golden Knights",
+    "WPG": "Jets",
+    "WSH": "Capitals",
+}
 
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
@@ -219,6 +259,81 @@ def predict_views(game_id: int):
 
     return [prediction, features]
 
+
+def update_video_ids(supabase: Client):
+    if not os.environ.get("YOUTUBE_API_KEY"):
+        print("YOUTUBE_API_KEY not set, skipping update_video_ids")
+        return
+
+    from data.youtube import get_channel_videos
+
+    # games that are finished (have prediction) but don't have a video id yet
+    rows = (
+        supabase.table("views")
+        .select("game_id, game_date, opponent")
+        .not_.is_("predicted_views", "null")
+        .is_("video_id", "null")
+        .execute()
+    )
+    if not rows.data:
+        return
+
+    # fetch recent LFR videos 
+    videos = get_channel_videos(years_back=0.01)
+    lfr_videos = [v for v in videos if "LFR" in v.get("title", "")]
+
+    for row in rows.data:
+        game_id = row["game_id"]
+        game_date_raw = row["game_date"]
+        opponent_abbrev = row["opponent"]
+
+        # Normalize game_date to a date for comparison
+        if isinstance(game_date_raw, str):
+            game_date = datetime.strptime(game_date_raw[:10], "%Y-%m-%d").date()
+        else:
+            game_date = game_date_raw.date() if hasattr(game_date_raw, "date") else game_date_raw
+
+        opponent_name = ABBREV_TO_TEAM_NAME.get(opponent_abbrev, "")
+
+        def title_matches_opponent(title):
+            if not title:
+                return False
+            if opponent_abbrev and opponent_abbrev in title:
+                return True
+            if opponent_name and opponent_name in title:
+                return True
+            return False
+
+        # Candidate videos: published on game_date or game_date+1, LFR, opponent in title
+        game_date_plus_one = game_date + timedelta(days=1)
+        candidates = []
+        for v in lfr_videos:
+            pub = v.get("published_at")
+            if not pub:
+                continue
+            pub_date = pub.date() if hasattr(pub, "date") else datetime.strptime(str(pub)[:10], "%Y-%m-%d").date()
+            if pub_date != game_date and pub_date != game_date_plus_one:
+                continue
+            if not title_matches_opponent(v.get("title", "")):
+                continue
+            candidates.append(v)
+
+        if len(candidates) == 1:
+            video_id = candidates[0]["video_id"]
+            supabase.table("views").update({"video_id": video_id}).eq(
+                "game_id", game_id
+            ).execute()
+            print(f"Updated video_id for game {game_id} -> {video_id}")
+        elif len(candidates) > 1:
+            # Take the one published closest to game_date (earliest in window)
+            candidates.sort(key=lambda x: x.get("published_at") or datetime.min.replace(tzinfo=timezone.utc))
+            video_id = candidates[0]["video_id"]
+            supabase.table("views").update({"video_id": video_id}).eq(
+                "game_id", game_id
+            ).execute()
+            print(f"Updated video_id for game {game_id} -> {video_id} (picked first of {len(candidates)} candidates)")
+
+
 def update():
     if not url or not key:
         raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set")
@@ -251,7 +366,9 @@ def update():
             ).eq("game_id", game_id).execute()
             print(f"Updated predicted_views for game {game_id}: {round(prediction)}")
 
-        
+    update_video_ids(supabase)
+
+
 if __name__ == "__main__":
     print("Start LFR update")
     update()
