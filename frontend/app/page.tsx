@@ -86,8 +86,6 @@ export default function Home() {
       .catch(() => setNextGame(null));
   }, []);
 
-  console.log(nextGame);
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white font-sans">
@@ -113,77 +111,79 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <main className="mx-auto max-w-2xl px-6 py-12">
-        <h1 className="text-xl font-semibold text-zinc-900">
+    <div className="min-h-dvh bg-white font-sans">
+      <main
+        className="mx-auto max-w-2xl px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom))] pl-[max(1.5rem,env(safe-area-inset-left))] pr-[max(1.5rem,env(safe-area-inset-right))] sm:px-6 sm:py-12"
+      >
+        <h1 className="text-lg font-semibold text-zinc-900 sm:text-xl">
           Last Game
         </h1>
         <p className="mt-1 text-sm text-zinc-500">{dateStr}</p>
         <p className="text-sm text-zinc-500">
-            {game.is_home ? "vs" : "@"} {ABBREV_TO_NAME[game.opponent] ?? game.opponent}
-          </p>
+          {game.is_home ? "vs" : "@"} {ABBREV_TO_NAME[game.opponent] ?? game.opponent}
+        </p>
 
-        <div className="mt-8 flex flex-col items-center gap-6">
-          <div className="flex items-center gap-8">
-            <div className="flex flex-col items-center gap-2">
+        <div className="mt-6 flex flex-col items-center gap-4 sm:mt-8 sm:gap-6">
+          <div className="flex w-full max-w-sm items-center justify-between gap-3 sm:max-w-none sm:justify-center sm:gap-8">
+            <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5 sm:flex-none sm:gap-2">
               <Image
                 src={teamLogoUrl("TOR")}
                 alt="Toronto Maple Leafs"
                 width={120}
                 height={120}
-                className="object-contain"
+                className="h-16 w-16 shrink-0 object-contain sm:h-24 sm:w-24 md:h-[120px] md:w-[120px]"
               />
-              <span className="text-md font-medium text-zinc-700">
+              <span className="truncate text-center text-sm font-medium text-zinc-700 sm:text-base">
                 {ABBREV_TO_NAME.TOR}
               </span>
             </div>
-            <p className="min-w-16 text-center text-5xl font-bold tabular-nums text-zinc-900">
+            <p className="min-w-12 shrink-0 text-center text-3xl font-bold tabular-nums text-zinc-900 sm:min-w-16 sm:text-5xl">
               {game.leafs_score} – {game.opponent_score}
             </p>
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5 sm:flex-none sm:gap-2">
               <Image
                 src={teamLogoUrl(game.opponent)}
                 alt={ABBREV_TO_NAME[game.opponent] ?? game.opponent}
                 width={120}
                 height={120}
-                className="object-contain"
+                className="h-16 w-16 shrink-0 object-contain sm:h-24 sm:w-24 md:h-[120px] md:w-[120px]"
               />
-              <span className="text-md font-medium text-zinc-700">
+              <span className="truncate text-center text-sm font-medium text-zinc-700 sm:text-base">
                 {ABBREV_TO_NAME[game.opponent] ?? game.opponent}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-5 sm:mt-6">
           <p className="text-sm font-medium text-zinc-500">
             Predicted LFR views
           </p>
-          <p className="mt-1 text-2xl font-semibold text-zinc-900">
+          <p className="mt-1 text-xl font-semibold tabular-nums text-zinc-900 sm:text-2xl">
             {game.predicted_views.toLocaleString()}
           </p>
         </div>
 
         {nextGame && (
-          <div className="mt-10 border-t border-zinc-200 pt-8">
+          <div className="mt-8 border-t border-zinc-200 pt-6 sm:mt-10 sm:pt-8">
             <p className="text-xs font-medium uppercase tracking-widest text-zinc-400">
               Next game
             </p>
-            <div className="mt-3 flex items-center justify-center gap-4">
+            <div className="mt-3 flex items-center justify-center gap-3 sm:gap-4">
               <Image
                 src={teamLogoUrl("TOR")}
                 alt="Maple Leafs"
                 width={40}
                 height={40}
-                className="object-contain"
+                className="h-9 w-9 shrink-0 object-contain sm:h-10 sm:w-10"
               />
-              <span className="text-zinc-400">vs</span>
+              <span className="text-sm text-zinc-400 sm:text-base">vs</span>
               <Image
                 src={teamLogoUrl(nextGame.opponent)}
                 alt={ABBREV_TO_NAME[nextGame.opponent] ?? nextGame.opponent}
                 width={40}
                 height={40}
-                className="object-contain"
+                className="h-9 w-9 shrink-0 object-contain sm:h-10 sm:w-10"
               />
             </div>
             <p className="mt-1 text-center text-sm font-medium text-zinc-700">
