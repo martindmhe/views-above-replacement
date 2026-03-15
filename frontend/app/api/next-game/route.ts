@@ -20,8 +20,6 @@ export async function GET() {
     .limit(1)
     .maybeSingle();
 
-  console.log(data);
-
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
