@@ -55,6 +55,7 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 
+youtube_api_key = os.environ.get("YOUTUBE_API_KEY")
 
 def add_daily_game(supabase: Client):
 
@@ -261,9 +262,8 @@ def predict_views(game_id: int):
 
 
 def update_video_ids(supabase: Client):
-    if not os.environ.get("YOUTUBE_API_KEY"):
-        print("YOUTUBE_API_KEY not set, skipping update_video_ids")
-        return
+    if not youtube_api_key:
+        raise ValueError("YOUTUBE_API_KEY not set")
 
     from data.youtube import get_channel_videos
 
