@@ -2,23 +2,22 @@ name: Daily LFR Predictor Cron
 
 on:
   schedule:
-    - cron: '0 3 * * *'
-    - cron: '0 6 * * *'
+    - cron: '0 2 * * *'
+    - cron: '0 5 * * *'
   workflow_dispatch: 
 
 jobs:
   run-daily-prediction:
     runs-on: ubuntu-latest
     env:
-      # This opts you into Node 24 immediately to stop the warnings
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5 # Updated to v5
+        uses: actions/checkout@v5 
 
-      - name: Set up Python 3.12 # Using 3.12 for 2026 stability
-        uses: actions/setup-python@v6 # Updated to v6
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6 
         with:
           python-version: '3.12'
           cache: 'pip'
@@ -32,6 +31,6 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
         run: |
-          # Important: We run from the root so the paths in our script work
           python backend/scripts/script.py
